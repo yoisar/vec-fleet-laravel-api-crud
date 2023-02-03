@@ -1,0 +1,49 @@
+version: '3.3'
+name: vec-fleet-crud-api
+services:
+  # db 
+  vec-fleet-crud-api-mariadb:
+    platform: linux/amd64
+    container_name: vec_fleet_crud_api_mysql
+    image: docker.io/bitnami/mariadb:10.6
+    environment:
+      # is recommended only for development.
+      # - ALLOW_EMPTY_PASSWORD
+      - ALLOW_EMPTY_PASSWORD=yes
+      - MARIADB_USER=default
+      - MARIADB_DATABASE=vecfleet
+    volumes:
+      - 'mysqlData:/bitnami/mariadb/data'
+    ports:
+      - '1001:3306'
+    restart: always
+  # API 
+  vec-fleet-crud-api-api:
+    platform: linux/amd64
+    container_name: vec_fleet_crud_api
+    image: docker.io/bitnami/laravel:9
+    ports:
+      - '1002:8000'
+    environment:
+      - DB_HOST=vec-fleet-crud-api-mariadb
+      - DB_PORT=3306
+      - DB_USERNAME=default
+      - DB_DATABASE=vecfleet
+    volumes:
+      - './api/v1:/app'
+    depends_on:
+      - vec-fleet-crud-api-mariadb
+    # phpmyadmin
+  vec-fleet-crud-api-phpmyadmin:
+    platform: linux/amd64
+    container_name: vec_fleet_crud_api_phpmyadmin
+    restart: always
+    image: phpmyadmin
+    ports:
+      - 1003:80
+    environment:
+      PMA_HOSTS: vec-fleet-crud-api-mariadb
+
+volumes:
+  mysqlData:
+    driver: local
